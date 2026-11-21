@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, downloadMediaMessage, fetchLatestBaileysVersion, Browsers } = require('@whiskeysockets/baileys');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const ytdl = require('@distube/ytdl-core');
@@ -15,8 +15,9 @@ const GEMINI_API_KEY = 'TU_API_KEY_DE_GEMINI';
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('Bot Activo 24/7'));
-app.listen(3000, () => console.log('Servidor listo'));
+app.listen(PORT, () => console.log('Servidor listo en puerto ' + PORT));
 
 let botActivo = true;
 const configGrupos = {};
@@ -35,16 +36,35 @@ function getGroupConfig(jid) {
 
 async function iniciarBot() {
     const { state, saveCreds } = await useMultiFileAuthState('sesion_bot');
-    const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }), printQRInTerminal: false });
+    const { version } = await fetchLatestBaileysVersion();
+    const sock = makeWASocket({
+        version,
+        auth: state,
+        logger: pino({ level: 'error' }),
+        printQRInTerminal: false,
+        browser: Browsers.ubuntu('Chrome')
+    });
 
     if (!sock.authState.creds.registered) {
         setTimeout(async () => {
-            let code = await sock.requestPairingCode(BOT_NUMBER);
-            console.log('>>> CODIGO DE VINCULACION:', code);
-        }, 3000);
+            try {
+                let code = await sock.requestPairingCode(BOT_NUMBER);
+                console.log('====================================');
+                console.log('TU CODIGO DE VINCULACION ES:', code);
+                console.log('====================================');
+            } catch (err) {
+                console.log('Error al pedir codigo:', err);
+            }
+        }, 4000);
     }
 
     sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', (update) => {
+        const { connection } = update;
+        if (connection === 'open') console.log('✅ ¡WHATSAPP CONECTADO CON EXITO!');
+        if (connection === 'close') iniciarBot();
+    });
 
     sock.ev.on('group-participants.update', async (anu) => {
         const cfg = getGroupConfig(anu.id);
@@ -236,3 +256,4 @@ async function iniciarBot() {
     });
 }
 iniciarBot();
+
