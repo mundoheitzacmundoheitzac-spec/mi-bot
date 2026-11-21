@@ -9,8 +9,8 @@ const express = require('express');
 const pino = require('pino');
 
 let PREFIX = '/';
-const OWNER_NUMBER = '5216391366054@s.whatsapp.net';
-const BOT_NUMBER = '5216391366054';
+const OWNER_NUMBER = '526391366054@s.whatsapp.net';
+const BOT_NUMBER = '526391366054';
 const GEMINI_API_KEY = 'TU_API_KEY_DE_GEMINI';
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
