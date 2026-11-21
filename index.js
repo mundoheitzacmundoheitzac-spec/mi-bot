@@ -42,7 +42,8 @@ async function iniciarBot() {
         auth: state,
         logger: pino({ level: 'error' }),
         printQRInTerminal: false,
-        browser: Browsers.ubuntu('Chrome')
+        browser: Browsers.macOS('Desktop')
+
     });
 
     if (!sock.authState.creds.registered) {
